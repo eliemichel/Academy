@@ -45,10 +45,9 @@ class Academy:
         page = urlopen('https://fr.wiktionary.org/wiki/' + quote(word))
         res = 'Le Wiktionnaire ne possède pas d’article avec ce nom exact'.encode() not in page.readall()
     except HTTPError as e:
-      if e.code == 404:
         res = False
-      else:
-        raise e
+        if e.code != 404:
+            print('[Warning] Unexpected HTTP Status: %d (for %s)' % (e.code, word))
 
     if res:
       self.save_db(word, res, 'wikitionnaire')
@@ -63,10 +62,9 @@ class Academy:
         page = urlopen('https://fr.wikipedia.org/wiki/' + quote(word))
         res = "Wikipédia ne possède pas d'article avec ce nom.".encode() not in page.readall()
     except HTTPError as e:
-      if e.code == 404:
         res = False
-      else:
-        raise e
+        if e.code != 404:
+            print('[Warning] Unexpected HTTP Status: %d (for %s)' % (e.code, word))
 
     if res:
       self.save_db(word, res, 'wikipedia')
@@ -103,13 +101,16 @@ class Academy:
     """check(self, word)
     Return true if and only if `word` exists."""
 
+    # Check local data
     res = self.check_db(word)
-    if res == None:
+    if not res:
       res = self.check_db(word.lower())
+
+    # Ask online
     if res == None:
       res = self.check_online(word)
-    if res == None:
-      res = self.check_online(word.lower())
+      if not res:
+        res = self.check_online(word.lower())
 
     return res
 

@@ -1,7 +1,9 @@
 import re
+import sys
 
 from academy import Academy
 
+filename = '/home/elie/irclogs/ens/#courssysteme.log'
 
 print("Prepare Academy...")
 ac = Academy()
@@ -17,13 +19,14 @@ def ignore(word):
 
 count = 0
 count_err = 0
-with open('lemonde.dump', 'r') as text:
+with open(filename, 'r') as text:
 	for line in text:
 		for word in re.split('\\W+', line):
 			if ignore(word):
 				continue
 			count += 1
-			print('[%d/%d] %s                    ' % (count_err, count, word), end='\r')
+			sys.stderr.write('[%d/%d] %s                   \r' % (count_err, count, word))
+			sys.stderr.flush()
 			if not ac.check(word):
 				count_err += 1
 				print('[%d/%d] Invalid word: %s' % (count_err, count, word))
