@@ -1,4 +1,5 @@
-from urllib.request import urlopen
+from urllib.request import urlopen, HTTPError
+from urllib.parse import quote
 from lxml.etree import parse, HTMLParser
 import re
 import sqlite3
@@ -19,36 +20,72 @@ class Academy:
     """install_db(self)
     Initialize database tables (Word)"""
     print("Installing...")
-    self.cursor.execute('CREATE TABLE Word(word TEXT NOT NULL PRIMARY KEY, is_valid INT)')
+    self.cursor.execute('CREATE TABLE Word(word TEXT NOT NULL PRIMARY KEY, is_valid INT, origin TEXT)')
     self.db.commit()
 
   def __init__(self):
-    # Init online dict (Get session key)
-    self.site = 'http://atilf.atilf.fr'
-    page = urlopen(self.site + '/Dendien/scripts/generic/showps.exe?p=main.txt;java=no;host=interface_academie8.txt')
-    self.session = re.search(';s=(\\d+)', str(page.readall())).group(1)
-
     # Init database
     self.db = sqlite3.connect('words.db')
     self.cursor = self.db.cursor()
     if not self.is_db_installed():
       self.install_db()
 
-  def save_db(self, word, is_valid):
+  def save_db(self, word, is_valid, origin):
     """save_db(self, word, is_valid)
     Add a new line to the database."""
-    self.cursor.execute('INSERT OR REPLACE INTO Word (word, is_valid) VALUES (?, ?)', [word, is_valid])
+    self.cursor.execute('INSERT OR REPLACE INTO Word (word, is_valid, origin) VALUES (?, ?, ?)', [word, is_valid, origin])
     self.db.commit()
     
+
+  def check_wikitionnaire(self, word):
+    """check_wikitionnaire(self, word)
+    Ask the Wikitionnaire whether `word` exists."""
+    
+    try:
+        page = urlopen('https://fr.wiktionary.org/wiki/' + quote(word.lower()))
+        res = 'Le Wiktionnaire ne possède pas d’article avec ce nom exact'.encode() not in page.readall()
+    except HTTPError as e:
+      if e.code == 404:
+        res = False
+      else:
+        raise e
+
+    if res:
+      self.save_db(word, res, 'wikitionnaire')
+
+    return res
+
+  def check_wikipedia(self, word):
+    """check_wikitionnaire(self, word)
+    Ask the Wikipedia whether `word` exists."""
+    
+    try:
+        page = urlopen('https://fr.wikipedia.org/wiki/' + quote(word.lower()))
+        res = "Wikipédia ne possède pas d'article avec ce nom.".encode() not in page.readall()
+    except HTTPError as e:
+      if e.code == 404:
+        res = False
+      else:
+        raise e
+
+    if res:
+      self.save_db(word, res, 'wikipedia')
+
+    return res
 
   def check_online(self, word):
     """check_online(self, word)
     Ask an online dictionnary whether `word` exists."""
     
-    data = b'var0=&var2=' + word.encode('cp1252') + b'&var3=*!!*&var5=*!!*'
-    page = urlopen(self.site + '/Dendien/scripts/generic/cherche.exe?15;s=' + self.session, data)
+    res = self.check_wikitionnaire(word)
+    if not res:
+      res = self.check_wikipedia(word)
+    if not res:
+      self.save_db(word, res, 'online')
 
-    return b'Aucun document' not in page.readall()
+    return res
+
+
 
   def check_db(self, word):
     """check_db(self, word)
@@ -69,8 +106,14 @@ class Academy:
     res = self.check_db(word)
     if res == None:
       res = self.check_online(word)
-      self.save_db(word, res)
 
     return res
+
+  def white_list(self, filename):
+    """white_list(self, filename)
+    Add words from `filename` to the db.
+    One word per line."""
+    pass # TODO
+
   
 
