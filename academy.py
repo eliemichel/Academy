@@ -42,7 +42,7 @@ class Academy:
     Ask the Wikitionnaire whether `word` exists."""
     
     try:
-        page = urlopen('https://fr.wiktionary.org/wiki/' + quote(word.lower()))
+        page = urlopen('https://fr.wiktionary.org/wiki/' + quote(word))
         res = 'Le Wiktionnaire ne possède pas d’article avec ce nom exact'.encode() not in page.readall()
     except HTTPError as e:
       if e.code == 404:
@@ -60,7 +60,7 @@ class Academy:
     Ask the Wikipedia whether `word` exists."""
     
     try:
-        page = urlopen('https://fr.wikipedia.org/wiki/' + quote(word.lower()))
+        page = urlopen('https://fr.wikipedia.org/wiki/' + quote(word))
         res = "Wikipédia ne possède pas d'article avec ce nom.".encode() not in page.readall()
     except HTTPError as e:
       if e.code == 404:
@@ -105,7 +105,11 @@ class Academy:
 
     res = self.check_db(word)
     if res == None:
+      res = self.check_db(word.lower())
+    if res == None:
       res = self.check_online(word)
+    if res == None:
+      res = self.check_online(word.lower())
 
     return res
 

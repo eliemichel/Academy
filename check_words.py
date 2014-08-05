@@ -23,7 +23,7 @@ with open('lemonde.dump', 'r') as text:
 			if ignore(word):
 				continue
 			count += 1
-			print('[%d/%d] %s' % (count_err, count, word), end='')
+			print('[%d/%d] %s                    ' % (count_err, count, word), end='\r')
 			if not ac.check(word):
 				count_err += 1
 				print('[%d/%d] Invalid word: %s' % (count_err, count, word))
