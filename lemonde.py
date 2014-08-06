@@ -2,6 +2,12 @@ from urllib.request import urlopen
 from lxml.etree import parse, HTMLParser
 html = HTMLParser()
 
+"""
+Dump paragraphs from last LeMonde.fr articles (those in RSS feeds).
+It can constitute an interesting sentence basis.
+"""
+
+
 page = urlopen('http://www.lemonde.fr/rss/')
 dom = parse(page, html)
 

@@ -6,8 +6,17 @@ import sqlite3
 
 html = HTMLParser()
 
+wikitionnary_base = 'https://fr.wiktionary.org/wiki/'
+wikipedia_base = 'https://fr.wikipedia.org/wiki/'
+
 class Academy:
-  """An Academy is a way to ask whether a word exists."""
+  """An Academy is a way to ask whether a word exists.
+  It uses Wiktionnary and Wikipedia (for proper nouns) to
+  determine whether the word exists.
+  Edit urls to use it in another language than French!
+  Example of use:
+  ac = Academy()
+  ac.check('word')"""
 
   def is_db_installed(self):
     """is_db_installed(self)
@@ -42,7 +51,7 @@ class Academy:
     Ask the Wikitionnaire whether `word` exists."""
     
     try:
-        page = urlopen('https://fr.wiktionary.org/wiki/' + quote(word))
+        page = urlopen(wikitionary_base + quote(word))
         res = 'Le Wiktionnaire ne possède pas d’article avec ce nom exact'.encode() not in page.readall()
     except HTTPError as e:
         res = False
@@ -59,7 +68,7 @@ class Academy:
     Ask the Wikipedia whether `word` exists."""
     
     try:
-        page = urlopen('https://fr.wikipedia.org/wiki/' + quote(word))
+        page = urlopen(wikipedia_base + quote(word))
         res = "Wikipédia ne possède pas d'article avec ce nom.".encode() not in page.readall()
     except HTTPError as e:
         res = False

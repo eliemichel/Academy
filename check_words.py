@@ -3,7 +3,11 @@ import sys
 
 from academy import Academy
 
-filename = '/home/elie/irclogs/ens/#courssysteme.log'
+"""
+Get non existing words contained in file `filename`.
+"""
+
+filename = 'lemonde.dump'
 
 print("Prepare Academy...")
 ac = Academy()
